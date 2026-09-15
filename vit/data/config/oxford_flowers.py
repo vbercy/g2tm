@@ -15,7 +15,7 @@
 
 DATASET_CONFIG = {
     "name": "oxford_flowers",
-    "data_root": "/data1/is156025/vb282713/Oxford_Flowers-102",
+    "data_root": "/",
     "num_classes": 102,
     "label_prefix": "oxford_flower",
     "download": False,

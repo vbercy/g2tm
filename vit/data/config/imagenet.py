@@ -15,7 +15,7 @@
 
 DATASET_CONFIG = {
     "name": "imagenet",
-    "data_root": "/database2/ILSVRC2012_SOURCES/",
+    "data_root": "/",
     "num_classes": 1000,
     "label_prefix": "imagenet_class",
     "download": False,

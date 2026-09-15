@@ -15,7 +15,7 @@
 
 DATASET_CONFIG = {
     "name": "cifar100",
-    "data_root": "/database2/cifar-100-python/",
+    "data_root": "/",
     "num_classes": 100,
     "label_prefix": "cifar100_class",
     "download": False,

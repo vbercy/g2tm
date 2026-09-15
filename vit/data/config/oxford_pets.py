@@ -15,7 +15,7 @@
 
 DATASET_CONFIG = {
     "name": "oxford_pets",
-    "data_root": "/data1/is156025/vb282713/Oxford-IIIT_Pets",
+    "data_root": "/",
     "num_classes": 37,
     "label_prefix": "oxford_pet",
     "download": False,

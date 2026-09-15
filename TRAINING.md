@@ -3,9 +3,10 @@
 Below, we provide the training commands for training ViT + G2TM.
 
 The following datasets can be loaded using the `dataset` option:
-* [ADE20K](https://ade20k.csail.mit.edu/)
-* [Cityscapes](https://www.cityscapes-dataset.com/)
-* [Pascal-Context](https://cs.stanford.edu/~roozbeh/pascal-context/)
+* [ImageNet-1k](https://image-net.org/index.php)
+* [CIFAR-100](https://cave.cs.toronto.edu/kriz/cifar.html)
+* [Oxford-IIIT Pet](https://www.robots.ox.ac.uk/~vgg/data/pets/)
+* [Oxford Flowers](https://www.robots.ox.ac.uk/~vgg/data/flowers/17/)
 
 Different sizes are available for ViT using the `backbone` option:
 * ViT-T: `vit_tiny_patch16_384`
@@ -18,10 +19,10 @@ For more configuration options, see [vit/config.yml](vit/config.yml) and [vit/tr
 Do not forget to define the `DATASET` environment variable:
 
 ```bash
-export DATASET=/database2/ADE20K
+export DATASET=<dataset_dir>
 ```
 
-## Single GPU on ADE20K
+## Single GPU on ImageNet-1k
 
 The following commands enable single-GPU training with different ViT backbone sizes.
 
@@ -29,7 +30,7 @@ ViT + G2TM at layer 2 with threshold 0.88, and ViT-T backbone:
 
 ```bash
 python ./vit/train.py --log-dir <tiny_model_dir> \
-                       --dataset ade20k \
+                       --dataset imagenet \
                        --backbone vit_tiny_patch16_384 \
                        --patch-type graph \
                        --selected-layer 2 \
@@ -41,7 +42,7 @@ ViT + G2TM at layer 2 with threshold 0.88, and ViT-S backbone:
 
 ```bash
 python ./vit/train.py --log-dir <small_model_dir> \
-                       --dataset ade20k \
+                       --dataset imagenet \
                        --backbone vit_small_patch16_384 \
                        --patch-type graph \
                        --selected-layer 2 \
@@ -53,7 +54,7 @@ ViT + G2TM at layer 2 with threshold 0.88, and ViT-B backbone:
 
 ```bash
 python ./vit/train.py --log-dir <base_model_dir> \
-                       --dataset ade20k \
+                       --dataset imagenet \
                        --backbone vit_base_patch16_384 \
                        --patch-type graph \
                        --selected-layer 2 \
@@ -65,7 +66,7 @@ ViT + G2TM at layer 2 with threshold 0.88, and ViT-L backbone:
 
 ```bash
 python ./vit/train.py --log-dir <large_model_dir> \
-                       --dataset ade20k \
+                       --dataset imagenet \
                        --backbone vit_large_patch16_384 \
                        --patch-type graph \
                        --selected-layer 2 \
@@ -119,7 +120,7 @@ ViT + G2TM at layer 2 with threshold 0.88, with Proportional Attention and ViT-S
 
 ```bash
 python ./vit/train.py --log-dir <pa_model_dir> \
-                       --dataset ade20k \
+                       --dataset imagenet \
                        --backbone vit_small_patch16_384 \
                        --patch-type graph \
                        --selected-layer 2 \
@@ -132,7 +133,7 @@ ViT + G2TM at layer 2 with threshold 0.88, with Inverse Proportional Attention a
 
 ```bash
 python ./vit/train.py --log-dir <ipa_model_dir> \
-                       --dataset ade20k \
+                       --dataset imagenet \
                        --backbone vit_small_patch16_384 \
                        --patch-type graph \
                        --selected-layer 2 \
@@ -155,7 +156,7 @@ ViT + G2TM at layer 2 with threshold 0.88, with curriculum and ViT-S backbone:
 
 ```bash
 python ./vit/train.py --log-dir <curric_model_dir> \
-                       --dataset ade20k \
+                       --dataset imagenet \
                        --backbone vit_small_patch16_384 \
                        --patch-type graph \
                        --selected-layer 2 \

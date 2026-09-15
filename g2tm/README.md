@@ -109,15 +109,7 @@ print('CUDA:', torch.cuda.is_available(), '| output:', tuple(model(torch.randn(1
 
 **5. Prepare the datasets**
 
-If needed, to download and prepare ADE20K, Cityscapes and/or PascalContext dataset(s), use the following command(s):
-
-```bash
-python ./vit/scripts/prepare_ade20k.py <ade20k_dir>
-python ./vit/scripts/prepare_cityscapes.py <cityscapes_dir> --username <username> --password <password>
-python ./vit/scripts/prepare_pcontext.py <pcontext_dir>
-```
-
-Then, define an OS environment variable pointing to the directory corresponding to the dataset you want to use:
+Define an OS environment variable pointing to the directory corresponding to the dataset you want to use:
 
 ```bash
 export DATASET=/path/to/dataset/dir
@@ -284,7 +276,7 @@ See [RESULTS](./RESULTS.md) for some comparative results for ViT + G2TM and the 
 - [x] Training and Inference scripts
 - [x] Flops and Speedtest scripts
 - [x] Token and attention map visualization scripts
-- [x] Results on ADE20K and Cityscapes datasets
+- [x] Results on ImageNet-1k dataset
 - [x] ONNX export script
 - [ ] Nvidia Jetson running scripts
 ```

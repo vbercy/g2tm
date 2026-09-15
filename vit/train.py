@@ -279,11 +279,6 @@ def main(
     # dataset
     dataset_kwargs = variant["dataset_kwargs"]
 
-    if dataset_kwargs["dataset"] == "ade20k_large":
-        dataset_kwargs["dataset"] = "ade20k"
-    elif dataset_kwargs["dataset"] == "cityscapes_large":
-        dataset_kwargs["dataset"] = "cityscapes"
-
     train_loader = create_dataset(dataset_kwargs)
     val_kwargs = dataset_kwargs.copy()
     val_kwargs["split"] = "val"

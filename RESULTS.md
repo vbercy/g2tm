@@ -8,13 +8,13 @@ Below, we provide the results for different ViT sizes (T for Tiny, S for Small, 
 
 ## ImageNet (384×384)
 
-The models are trained and evaluated on the ADE20K dataset with a crop resolution of 384×384. We provide two different settings for our G2TM module: one applied at the 1st layer with a threshold equal to 0.95 (noted G2TM@1[0.95]) and one applied at the 2nd layer with a threshold equal to 0.86 (noted G2TM@2[0.86]). The sign †, alongside the G2TM settings (e.g.: G2TM†@2[0.86]) indicates the use of the threshold curriculum training strategy, otherwise the threshold value is constant during training.
+The models are trained and evaluated on the ImageNet-1k dataset with a crop resolution of 384×384. We provide two different settings for our G2TM module: one applied at the 1st layer with a threshold equal to 0.95 (noted G2TM@1[0.95]) and one applied at the 2nd layer with a threshold equal to 0.86 (noted G2TM@2[0.86]). The sign †, alongside the G2TM settings (e.g.: G2TM†@2[0.86]) indicates the use of the threshold curriculum training strategy, otherwise the threshold value is constant during training.
 
 <table>
     <tr>
         <th>Model</th>
         <th>G2TM settings</th>
-        <th>mIoU</th>
+        <th>Top-1 accuracy</th>
         <th>Im/sec</th>
         <th>GFLOPs</th>
         <th colspan="3">Download</th>
