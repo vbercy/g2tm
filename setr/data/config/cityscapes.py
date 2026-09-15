@@ -1,0 +1,103 @@
+# MIT License
+
+# Copyright (c) 2021 Robin Strudel
+# Copyright (c) INRIA
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+"""Cityscapes dataset configuration file."""
+
+# pylint: disable=C0103,R1735
+
+# dataset settings
+dataset_type = "CityscapesDataset"
+data_root = "/database2/cityscapes/"
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True
+)
+crop_size = (768, 768)
+max_ratio = 2
+train_pipeline = [
+    dict(type="LoadImageFromFile"),
+    dict(type="LoadAnnotations"),
+    dict(type="RandomResize", scale=(2048, 1024), ratio_range=(0.5, 2.0)),
+    dict(type="RandomCrop", crop_size=crop_size, cat_max_ratio=0.75),
+    dict(type="RandomFlip", prob=0.5),
+    dict(type="PhotoMetricDistortion"),
+    dict(type="Normalize", **img_norm_cfg),
+    dict(type="Pad", size=crop_size, pad_val=dict(img=0, seg=255)),
+    dict(type="DefaultFormatBundle"),
+    dict(type="PackSegInputs"),
+]
+val_pipeline = [
+    dict(type="LoadImageFromFile"),
+    dict(type="LoadAnnotations"),
+    dict(type="Resize", scale=(1024 * max_ratio, 1024), keep_ratio=True),
+    dict(type="Normalize", **img_norm_cfg),
+    dict(type="PackSegInputs"),
+]
+test_pipeline = [
+    dict(type="LoadImageFromFile"),
+    dict(type="LoadAnnotations"),
+    dict(type="Resize", scale=(1024 * max_ratio, 1024), keep_ratio=True),
+    dict(type="Normalize", **img_norm_cfg),
+    dict(type="PackSegInputs"),
+]
+tta_pipeline = [
+    dict(type="LoadImageFromFile", backend_args=None),
+    dict(
+        type="TestTimeAug",
+        transforms=[
+            [dict(type="Resize", scale=(1024 * max_ratio, 1024), keep_ratio=True)],
+            [dict(type="RandomFlip", prob=0.0), dict(type="RandomFlip", prob=1.0)],
+            [dict(type="LoadAnnotations")],
+            [dict(type="PackSegInputs")],
+        ],
+    ),
+]
+data = dict(
+    samples_per_gpu=2,
+    workers_per_gpu=2,
+    train=dict(
+        type=dataset_type,
+        data_root=data_root,
+        data_prefix=dict(img_path="leftImg8bit/train", seg_map_path="gtFine/train"),
+        pipeline=train_pipeline,
+    ),
+    trainval=dict(
+        type=dataset_type,
+        data_root=data_root,
+        data_prefix=dict(
+            img_path=["leftImg8bit/train", "leftImg8bit/val"],
+            seg_map_path=["gtFine/train", "gtFine/val"],
+        ),
+        pipeline=train_pipeline,
+    ),
+    val=dict(
+        type=dataset_type,
+        data_root=data_root,
+        data_prefix=dict(img_path="leftImg8bit/val", seg_map_path="gtFine/val"),
+        pipeline=test_pipeline,
+    ),
+    test=dict(
+        type=dataset_type,
+        data_root=data_root,
+        data_prefix=dict(img_path="leftImg8bit/test", seg_map_path="gtFine/test"),
+        pipeline=test_pipeline,
+    ),
+)

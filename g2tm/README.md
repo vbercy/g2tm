@@ -8,10 +8,10 @@
 
 <p align="center">
   <!-- Python version -->
-  <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python versions">
+  <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python versions">
 
   <!-- Pytorch version -->
-  <img src="https://img.shields.io/badge/torch-2.11.0-red.svg" alt="Pytorch">
+  <img src="https://img.shields.io/badge/torch-2.4.1-red.svg" alt="Pytorch">
   
   <!-- Licence -->
   <img src="https://img.shields.io/badge/license-Apache2.0-green.svg" alt="License">
@@ -29,12 +29,12 @@
 
 <p align="center">
   <!-- Article -->
-  <a href="https://cea.hal.science/cea-05578363">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Original%20version-yellow" alt="Article">
+  <a href="https://www.scitepress.org/Link.aspx?doi=10.5220/0014267600004084">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Editor-yellow" alt="Article">
   </a>
-  <!-- Extension -->
-  <a href="#">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Extended%20version-yellow" alt="Article">
+  <!-- Article -->
+  <a href="https://cea.hal.science/cea-05578363">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Open--source-brightgreen" alt="Article">
   </a>
   <!-- Repository -->
   <a href="https://github.com/vbercy/g2tm">
@@ -51,9 +51,7 @@ Graph-Guided Token Merging (G2TM) is a lightweight one-shot module designed to e
 In this repository, Graph-Guided Token Merging (G2TM) is applied to
 [Rethinking Semantic Segmentation from a Sequence-to-Sequence Perspective with Transformers](https://arxiv.org/abs/2012.15840)
 by Sixiao Zheng, Jiachen Lu, Hengshuang Zhao, Xiatian Zhu, Zekun Luo, Yabiao Wang, Yanwei Fu, Jianfeng Feng, Tao Xiang, Philip HS. Torr and Li Zhang
-CVPR 2021, by integrating it into the Segmenter framework and extending it with token merging modules.
-
-**NOTE:** To run G2TM on other available models (Segmenter and EoMT for semantic segmentation, ViT for image classification), please change branch.
+CVPR 2021, by rewriting its code in pure PyTorch and extending it with token merging modules.
 
 ## Installation
 
@@ -62,7 +60,7 @@ In this section, we will explain how to set the environment up for this reposito
 **1. Clone the repository:**
 
 ``` bash
-git clone https://github.com/vbercy/g2tm --branch setr
+git clone https://github.com/vbercy/g2tm
 cd g2tm
 ```
 
@@ -107,12 +105,11 @@ from setr.model.vit import VisionTransformer
 from setr.model.factory import create_decoder
 from setr.model.setr import SETR
 from g2tm.patch import graph_setr_patch
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 encoder = VisionTransformer((128, 128), 16, 4, 192, 768, 3, 19)
-decoder = create_decoder(encoder, {'name': 'naive', 'n_cls': 19})
-model = SETR(encoder, decoder, n_cls=19).eval().to(device)
+decoder = create_decoder(encoder, {'name': 'naive', 'n_cls': 19, 'n_layers': 1, 'dropout': 0.0, 'drop_path_rate': 0.0})
+model = SETR(encoder, decoder, n_cls=19).eval()
 graph_setr_patch(model, selected_layer=2, threshold=0.88)
-print('CUDA:', torch.cuda.is_available(), '| output:', tuple(model(torch.randn(1, 3, 128, 128).to(device)).shape))
+print('CUDA:', torch.cuda.is_available(), '| output:', tuple(model(torch.randn(1, 3, 128, 128)).shape))
 "
 # CUDA: True | output: (1, 19, 128, 128)
 ```
@@ -137,15 +134,15 @@ export DATASET=/path/to/dataset/dir
 
 ### Training
 
-To train a SETR model (backbone size tiny, small, base or large with a Naive, PUP or MLA decoder) with G2TM on a specific dataset (whose path is provided by `DATASET`), use the command provided below. For example, we chose to apply G2TM at the 2nd layer with a threshold of 0.88 and without any modified attention formulation. We recommand using the Fast SV implementation of G2TM here, as it is the fastest implementation when running a batched training.
+To train a SETR model (size tiny, small, base or large) with G2TM on a specific dataset (whose path is provided by `DATASET`), use the command provided below. For example, we chose to apply G2TM at the 2nd layer with a threshold of 0.88 and without any modified attention formulation. We recommand using the Fast SV implementation of G2TM here, as it is the fastest implementation when running a batched training.
 
-**NOTE:** a log file and a tensorboard directory will automatically be created for you to monitor your training.
+**Note:** a log file and a tensorboard directory will automatically be created for you to monitor your training.
 
 ```bash
 python ./setr/train.py --log-dir <model_dir> \
                        --dataset <dataset_name> \
                        --backbone vit_<size>_patch16_384 \
-                       --decoder <decoder> \
+                       --decoder mask_transformer \
                        --patch-type graph \
                        --selected-layer 2 \
                        --threshold 0.88 \
@@ -238,8 +235,8 @@ python ./setr/show_attn_map.py <ckpt_file> <img_path> \
        <output_dir> <dataset_cmap> \
        --cls --enc --layer-id <layer> \
        --patch-type graph \
-       --selected-layer 2 \
-       --threshold 0.88
+       --selected-layer 1 \
+       --threshold 0.95
 ```
 
 We explain here the specific options for G2TM:
@@ -253,12 +250,12 @@ To get some statistics on the remaining tokens after merging, please run the fol
 python ./setr/token_stats.py <ckpt_file> <dataset> \
        --layer-id <layer> \
        --patch-type graph \
-       --selected-layer 2 \
-       --threshold 0.88
+       --selected-layer 1 \
+       --threshold 0.95
 ```
 
 We explain here the specific options for G2TM:
-- `--layer-id <layer>`: The index of the layer (starting from 0) where to measure the token statistics (measured after the merging operation if the Transformer block contains a G2TM module). In this example, it must be greater or equal to 1.
+- `--layer-id <layer>`: The index of the layer (starting from 0) where to measure the token statistics (measured after the merging operation if the Transformer block contains a G2TM module).
 
 **All token commands** can be run with or without G2TM using the `patch-type` option, as well as with or without (Inverse) Proportional Attention using the `prop-attn` or `iprop-attn` options.
 
@@ -266,7 +263,7 @@ We explain here the specific options for G2TM:
 
 To export a specific model into the ONNX format and evaluate it using ONNX Runtime, use the command provided below. In the example below, we convert a SETR model with G2TM applied at the 2nd layer with a threshold of 0.88 into an ONNX file. G2TM hyperparameters will be frozen inside the file.
 
-**NOTE:** The "ONNX-friendly" implementation of G2TM, using FastSV algorithm, will be automatically selected.
+**Note:** The "ONNX-friendly" implementation of G2TM, using FastSV algorithm, will be automatically selected. In pratice, on ADE20K, 7 iterations are enough to retain the same accuracy as the original implementation of G2TM on a SETR (see next command).
 
 ```bash
 python ./setr/export_onnx.py <model_path> \
@@ -274,6 +271,7 @@ python ./setr/export_onnx.py <model_path> \
        --patch-type graph \
        --selected-layer 2 \
        --threshold 0.88 \
+       --batch-size 8 \
        --num-iters 7 \
        --eval-onnx
 ```
@@ -285,13 +283,13 @@ We explain here the specific options for G2TM:
 
 **All export commands** can be run with or without G2TM using the `patch-type` option, as well as with or without (Inverse) Proportional Attention using the `prop-attn` or `iprop-attn` options.
 
-As the Fast SV version is an iterative algorithm, it needs a certain number of iterations to retain the same accuracy and fusion patterns as the original BFS implementation, otherwise it can leave connected components split. To determine the minimum number of iterations needed by FastSV for given model and dataset, you can run the command below. In pratice, the number of iterations needed on ADE20K never exceeds 10 with the standard G2TM hyperparameters.
+As the Fast SV version is an iterative algorithm, it needs a certain number of iterations to achieve the same fusions as the BFS version, otherwise it can leave connected components split. To determine the minimum number of iterations needed by FastSV for given model and dataset, you can run the command below.
 
 ```bash
 python ./setr/fastsv_iters.py <model_path> <dataset_name> \
        --selected-layer 2 \
        --threshold 0.88 \
-       --max-iters 10 \
+       --max-iters 16 \
        [--n-images N]
 ```
 
@@ -301,6 +299,8 @@ See [RESULTS](./RESULTS.md) for some comparative results for SETR + G2TM and the
 
 **NOTE:** We are still looking for a solution to host all model checkpoints, in the meantime do not hesitate to request the checkpoints by contacting one of the authors.
 
+**WARNING: For now, results above are given using the NetworkX implementation of G2TM, therefore differences in the throughput scores can occur if you use other implementations.**
+
 ## Upcoming Features 
 
 ```
@@ -308,13 +308,13 @@ See [RESULTS](./RESULTS.md) for some comparative results for SETR + G2TM and the
 - [x] Flops and Speedtest scripts
 - [x] Token and attention map visualization scripts
 - [x] Results on ADE20K and Cityscapes datasets
-- [x] ONNX export script and utility scripts
+- [x] ONNX export script
 - [ ] Nvidia Jetson running scripts
 ```
 
 ## Acknowledgements
 
-This code rewrite the official [SETR](https://github.com/fudan-zvg/SETR) code (under [MIT Licence](https://github.com/rstrudel/segmenter/blob/master/LICENSE)) using pure PyTorch and integrate it within the training/inference framework developed by the official [Segmenter](https://github.com/rstrudel/segmenter) code (under [MIT Licence](https://github.com/rstrudel/segmenter/blob/master/LICENSE)). It uses the repository structure and some utils functions from [ToMe](https://github.com/facebookresearch/ToMe) (under [CC-BY-NC licence](https://github.com/facebookresearch/ToMe/blob/main/LICENSE)), as well as utils functions from [AGLM](https://github.com/tue-mps/algm-segmenter).
+This code rewrite the official [SETR](https://github.com/fudan-zvg/SETR) code (under [MIT Licence](https://github.com/rstrudel/segmenter/blob/master/LICENSE)) using pure PyTorch and integrate it within the training/inference framework developed by [Segmenter](https://github.com/rstrudel/segmenter). It uses the repository structure and some utils functions from [ToMe](https://github.com/facebookresearch/ToMe) (under [CC-BY-NC licence](https://github.com/facebookresearch/ToMe/blob/main/LICENSE)), as well as utils functions from [AGLM](https://github.com/tue-mps/algm-segmenter).
 
 Inheriting from the Segmenter repository, the Vision Transformer code is based on [timm](https://github.com/rwightman/pytorch-image-models) library (under [Apache 2.0 Licence](https://github.com/huggingface/pytorch-image-models/blob/main/LICENSE)) and the semantic segmentation training and evaluation pipelines are using the [mmsegmentation](https://github.com/open-mmlab/mmsegmentation) and [mmcv](https://github.com/open-mmlab/mmcv) libraries (under [Apache 2.0 Licence](https://github.com/open-mmlab/mmsegmentation/blob/main/LICENSE)).
 
