@@ -1,0 +1,99 @@
+# Copyright © 2025 Commissariat à l'Energie Atomique et aux Energies Alternatives (CEA)
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Script to compute the Top-1 accuracy score of a model.
+
+Example: see README.md
+"""
+
+import warnings
+
+import click
+import torch
+
+from vit.engine import evaluate
+from vit.data.factory import create_dataset
+from vit.model.factory import load_model
+from vit.utils import distributed
+import vit.utils.torch as ptu
+
+import g2tm
+
+warnings.filterwarnings("ignore")
+
+
+@torch.no_grad()
+@click.command()
+@click.argument("model_path", type=str)
+@click.option("--patch-type", default="pure", type=str)
+@click.option("--selected-layer", default=2, type=int)
+@click.option("--threshold", default=0.88, type=float)
+@click.option("--prop-attn/--no-prop-attn", default=False, is_flag=True)
+@click.option("--iprop-attn/--no-iprop-attn", default=False, is_flag=True)
+@click.option("--fast-sv/--bfs", default=False, is_flag=True)
+@click.option("--num-iters", default=None, type=int)
+def main(
+    model_path: str,
+    patch_type: str,
+    selected_layer: int,
+    threshold: float,
+    prop_attn: bool,
+    iprop_attn: bool,
+    fast_sv: bool,
+    num_iters: int,
+):
+    """Compute the Top-1 accuracy score of the model.
+
+    Args:
+        model_path (str): Path to PyTorch model.
+        patch_type (str): Token reduction method (pure => no reduction).
+        selected_layer (int): Layer to apply token reduction (1-based).
+        threshold (float): Threshold parameter for G2TM.
+        prop_attn (bool): Whether to apply Proportional Attention.
+        iprop_attn (bool): Whether to apply Inverse Proportional Attention.
+        fast_sv (bool): Whether to use FastSV version of G2TM, compatible
+            with the ONNX export.
+        num_iters (int): Number of FastSV iterations.
+    """
+    ptu.set_gpu_mode(True)
+    distributed.init_process()
+
+    model, variant = load_model(model_path)
+    dataset_kwargs = variant["dataset_kwargs"]
+    dataset_kwargs["batch_size"] = 1
+    dataset_kwargs["split"] = "test"
+    dataset_kwargs["crop"] = False
+    validation_loader = create_dataset(dataset_kwargs)
+
+    if patch_type == "graph":
+        g2tm.graph_vit_patch(
+            model, selected_layer, threshold, prop_attn, iprop_attn, fast_sv, num_iters
+        )
+
+    model.eval()
+    for p in model.parameters():
+        p.requires_grad = False
+    model.to(ptu.device)
+
+    amp_autocast = ptu.get_autocast(variant["amp"])
+
+    eval_logger = evaluate(model, validation_loader, amp_autocast)
+
+    print("Metrics:", eval_logger, flush=True)
+    print(str(eval_logger.top1_accuracy).split(" ", maxsplit=1)[0])
+    print("")
+
+
+if __name__ == "__main__":
+    main()  # pylint: disable=E1120

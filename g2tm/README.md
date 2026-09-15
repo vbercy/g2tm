@@ -8,10 +8,10 @@
 
 <p align="center">
   <!-- Python version -->
-  <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python versions">
+  <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python versions">
 
   <!-- Pytorch version -->
-  <img src="https://img.shields.io/badge/torch-2.11.0-red.svg" alt="Pytorch">
+  <img src="https://img.shields.io/badge/torch-2.4.1-red.svg" alt="Pytorch">
   
   <!-- Licence -->
   <img src="https://img.shields.io/badge/license-Apache2.0-green.svg" alt="License">
@@ -29,12 +29,12 @@
 
 <p align="center">
   <!-- Article -->
-  <a href="https://cea.hal.science/cea-05578363">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Original%20version-yellow" alt="Article">
+  <a href="https://www.scitepress.org/Link.aspx?doi=10.5220/0014267600004084">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Editor-yellow" alt="Article">
   </a>
-  <!-- Extension -->
-  <a href="#">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Extended%20version-yellow" alt="Article">
+  <!-- Article -->
+  <a href="https://cea.hal.science/cea-05578363">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Open--source-brightgreen" alt="Article">
   </a>
   <!-- Repository -->
   <a href="https://github.com/vbercy/g2tm">
@@ -50,9 +50,7 @@ Graph-Guided Token Merging (G2TM) is a lightweight one-shot module designed to e
 
 In this repository, Graph-Guided Token Merging (G2TM) is applied to
 [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929)
-by Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, Jakob Uszkoreit and Neil Houlsby, ICLR 2020, by integrating it into the Segmenter framework and extending its code with token merging modules.
-
-**NOTE:** To run G2TM on other available models (Segmenter, SETR and EoMT for semantic segmentation), please change branch.
+by Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, Jakob Uszkoreit and Neil Houlsby, ICLR 2020, by extending its code with token merging modules.
 
 ## Installation
 
@@ -61,7 +59,7 @@ In this section, we will explain how to set the environment up for this reposito
 **1. Clone the repository:**
 
 ``` bash
-git clone https://github.com/vbercy/g2tm --branch vit
+git clone https://github.com/vbercy/g2tm
 cd g2tm
 ```
 
@@ -101,11 +99,10 @@ import torch
 from vit.model.vit import VisionTransformer
 from vit.model.classifier import Classifier
 from g2tm.patch import graph_vit_patch
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 vit = VisionTransformer((128, 128), 16, 4, 192, 768, 3, 19)
-model = Classifier(vit, n_cls=19).eval().to(device)
+model = Classifier(vit, n_cls=19).eval()
 graph_vit_patch(model, selected_layer=2, threshold=0.88)
-print('CUDA:', torch.cuda.is_available(), '| output:', tuple(model(torch.randn(1, 3, 128, 128).to(device)).shape))
+print('CUDA:', torch.cuda.is_available(), '| output:', tuple(model(torch.randn(1, 3, 128, 128)).shape))
 "
 # CUDA: True | output: (1, 19, 128, 128)
 ```
@@ -132,7 +129,7 @@ export DATASET=/path/to/dataset/dir
 
 To train a ViT model (size tiny, small, base or large) with G2TM on a specific dataset (whose path is provided by `DATASET`), use the command provided below. For example, we chose to apply G2TM at the 2nd layer with a threshold of 0.88 and without any modified attention formulation. We recommand using the Fast SV implementation of G2TM here, as it is the fastest implementation when running a batched training.
 
-**NOTE:** a log file and a tensorboard directory will automatically be created for you to monitor your training.
+**Note:** a log file and a tensorboard directory will automatically be created for you to monitor your training.
 
 ```bash
 python ./vit/train.py --log-dir <model_dir> \
@@ -208,15 +205,15 @@ python ./vit/profile_model.py <ckpt_file> <dataset_name> \
 
 ### Token visualization
 
-To visualize attention maps as well as the tokens at a specified layer for a specific image, execute the following command. It supports visualizations for both models with and without token reduction. For more details on the outputs, see the function documentation. In the example below, we generate visualization for a ViT model with G2TM applied at the 2nd layer with a threshold of 0.86.
+To visualize attention maps as well as the tokens at a specified layer for a specific image, execute the following command. It supports visualizations for both models with and without token reduction. For more details on the outputs, see the function documentation. In the example below, we generate visualization for a ViT model with G2TM applied at the 2nd layer with a threshold of 0.88.
 
 ```bash
 python ./vit/show_attn_map.py <ckpt_file> <img_path> \
        <output_dir> <dataset_cmap> \
        --cls --enc --layer-id <layer> \
        --patch-type graph \
-       --selected-layer 2 \
-       --threshold 0.86
+       --selected-layer 1 \
+       --threshold 0.95
 ```
 
 We explain here the specific options for G2TM:
@@ -230,12 +227,12 @@ To get some statistics on the remaining tokens after merging, please run the fol
 python ./vit/token_stats.py <ckpt_file> <dataset> \
        --layer-id <layer> \
        --patch-type graph \
-       --selected-layer 2 \
-       --threshold 0.86
+       --selected-layer 1 \
+       --threshold 0.95
 ```
 
 We explain here the specific options for G2TM:
-- `--layer-id <layer>`: The index of the layer (starting from 0) where to measure the token statistics (measured after the merging operation if the Transformer block contains a G2TM module). In this example, it must be greater or equal to 1.
+- `--layer-id <layer>`: The index of the layer (starting from 0) where to measure the token statistics (measured after the merging operation if the Transformer block contains a G2TM module).
 
 **All token commands** can be run with or without G2TM using the `patch-type` option, as well as with or without (Inverse) Proportional Attention using the `prop-attn` or `iprop-attn` options.
 
@@ -243,7 +240,7 @@ We explain here the specific options for G2TM:
 
 To export a specific model into the ONNX format and evaluate it using ONNX Runtime, use the command provided below. In the example below, we convert a a ViT model with G2TM applied at the 2nd layer with a threshold of 0.88 into an ONNX file. G2TM hyperparameters will be frozen inside the file.
 
-**NOTE:** The "ONNX-friendly" implementation of G2TM, using FastSV algorithm, will be automatically selected.
+**Note:** The "ONNX-friendly" implementation of G2TM, using FastSV algorithm, will be automatically selected. In pratice, on ImageNet-1k, 6 iterations are enough to retain the same accuracy as the original implementation of G2TM on a ViT (see next command).
 
 ```bash
 python ./vit/export_onnx.py <model_path> \
@@ -251,6 +248,7 @@ python ./vit/export_onnx.py <model_path> \
        --patch-type graph \
        --selected-layer 2 \
        --threshold 0.88 \
+       --batch-size 8 \
        --num-iters 6 \
        --eval-onnx
 ```
@@ -262,13 +260,13 @@ We explain here the specific options for G2TM:
 
 **All export commands** can be run with or without G2TM using the `patch-type` option, as well as with or without (Inverse) Proportional Attention using the `prop-attn` or `iprop-attn` options.
 
-As the Fast SV version is an iterative algorithm, it needs a certain number of iterations to retain the same accuracy and fusion patterns as the original BFS implementation, otherwise it can leave connected components split. To determine the minimum number of iterations needed by FastSV for given model and dataset, you can run the command below. In pratice, the number of iterations needed on ImageNet-1k never exceeds 10 with the standard G2TM hyperparameters.
+As the Fast SV version is an iterative algorithm, it needs a certain number of iterations to achieve the same fusions as the BFS version, otherwise it can leave connected components split. To determine the minimum number of iterations needed by FastSV for given model and dataset, you can run the command below.
 
 ```bash
 python ./vit/fastsv_iters.py <model_path> <dataset_name> \
        --selected-layer 2 \
        --threshold 0.88 \
-       --max-iters 10 \
+       --max-iters 16 \
        [--n-images N]
 ```
 
@@ -287,7 +285,7 @@ See [RESULTS](./RESULTS.md) for some comparative results for ViT + G2TM and the 
 - [x] Flops and Speedtest scripts
 - [x] Token and attention map visualization scripts
 - [x] Results on ADE20K and Cityscapes datasets
-- [x] ONNX export script and utility scripts
+- [x] ONNX export script
 - [ ] Nvidia Jetson running scripts
 ```
 

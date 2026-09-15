@@ -1,0 +1,36 @@
+[build-system]
+requires = [
+    "setuptools<80.9.0",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vit"
+version = "0.0.1b"
+description = "Vision Transformer: Transformer Classifier adapted for G2TM."
+dependencies = [
+    "click",
+    "numpy",
+    "einops",
+    "python-hostlist",
+    "tqdm",
+    "requests",
+    "pyyaml",
+    "torch>=2",
+    "torchvision",
+    "onnx",
+    "onnxscript",
+    "onnxruntime-gpu==1.26.0",  # Last version working with CUDA 12.x
+    "timm==0.4.12",
+    "networkx==3.6.1",
+    "fvcore",
+    "cityscapesscripts",
+    "tensorboard",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pylint",
+    "flake8",
+]
