@@ -26,7 +26,6 @@ jobs:
     - name: Test  installation
       shell: bash -l {0}
       run: |
-        python -c 'import segm'
         python -c 'import g2tm'
         python -c "
         import torch
