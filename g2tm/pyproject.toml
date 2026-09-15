@@ -1,0 +1,29 @@
+[build-system]
+requires = [
+    "setuptools<80.9.0",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "g2tm"
+version = "0.1"
+description = "G2TM: Single Module Graph-Guided Token Merging for Efficient for Semantic Segmentation"
+readme = { file = "./README.md", content-type = "text/markdown" }
+authors = [
+    { name="Victor BERCY", email="victor.bercy@cea.fr" }
+]
+dependencies = [
+    "numpy>=2",
+    "torch>=2",
+    "torchvision",
+    "opencv-python",
+    "pillow",
+    "scipy",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pylint",
+    "flake8",
+]
