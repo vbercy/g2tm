@@ -26,6 +26,7 @@ jobs:
         if [ -f setup.py ]; then pip install -e .; fi
         if [ -d g2tm ]; then if [ -f g2tm/setup.py ]; then cd g2tm/ && pip install -e . && cd ../; fi; fi
     - name: Test  installation
+      shell: bash -l {0}
       run: |
         python -c 'import setr'
         python -c 'import g2tm'
