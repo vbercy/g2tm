@@ -18,7 +18,7 @@ For more configuration options, see [setr/config.yml](setr/config.yml) and [setr
 Do not forget to define the `DATASET` environment variable:
 
 ```bash
-export DATASET=/database2/ADE20K
+export DATASET=<dataset_dir>
 ```
 
 ## Single GPU on ADE20K
