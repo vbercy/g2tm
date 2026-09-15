@@ -1,0 +1,18 @@
+gitignore_parser==0.1.12
+jsonargparse[signatures]==4.38
+matplotlib
+timm==1.0.15
+wandb
+lightning==2.5.1.post0
+pytorch-lightning==2.5.1.post0
+transformers==4.56.1
+scipy==1.15.2
+torch==2.11.0
+torchvision==0.26.0
+onnx
+onnxscript
+onnxruntime-gpu==1.26.0  # Last version working with CUDA 12.x
+ipykernel==6.29.5
+fvcore
+torchmetrics==1.7.1
+pycocotools==2.0.8

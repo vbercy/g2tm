@@ -1,0 +1,44 @@
+name: Python Package using Conda
+
+on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Miniconda Python 3.11
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: '3.11'
+        activate-environment: test-env
+        auto-activate-base: false
+    - name: Install dependencies
+      shell: bash -l {0}
+      run: |
+        pip install setuptools==80.8.0 wheel
+        pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -d g2tm ]; then if [ -f g2tm/setup.py ]; then cd g2tm/ && pip install -e . && cd ../; fi; fi
+    - name: Test  installation
+      run: |
+        python -c 'import segm'
+        python -c 'import g2tm'
+        python -c "
+        import torch
+        from models.vit import ViT
+        from models.eomt import EoMT
+        from g2tm.patch import graph_eomt_patch
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        encoder = ViT((512, 512), backbone_name='vit_tiny_patch16_384', ckpt_path='none')
+        net = EoMT(encoder, num_classes=150, num_q=100, masked_attn_enabled=False)
+        graph_eomt_patch(net, selected_layer=2, threshold=0.0)
+        net.eval().to(device)
+        with torch.inference_mode():
+            masks, classes = net(torch.rand(1, 3, 512, 512, device=device))
+        merged = net.info['size'].size(1) < net.num_q + 1 + net.n_patch_tokens
+        print(f'CUDA: {torch.cuda.is_available()} | G2TM merged: {merged} | masks: {tuple(masks[-1].shape)} | classes: {tuple(classes[-1].shape)}')
+        "
