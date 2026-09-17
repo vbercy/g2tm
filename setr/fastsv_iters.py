@@ -49,6 +49,10 @@ from setr.model.factory import load_model
 import setr.utils.torch as ptu
 
 
+class _FeaturesCaptured(Exception):
+    """Raised to unwind the forward pass once G2TM has received its input."""
+
+
 @contextmanager
 def record_merge_inputs(records: list):
     """Record the token sequences handed to G2TM, without altering the model.
@@ -66,9 +70,11 @@ def record_merge_inputs(records: list):
     patch_module = importlib.import_module("g2tm.patch.graph_setr_patch")
     original = patch_module.bfs_merge
 
-    def recorder(feat, threshold, is_encoder=True, distill_token=False):
+    def recorder(
+        feat, threshold, is_encoder=True, distill_token=False  # pylint: disable=W0613
+    ):
         records.append((feat.detach(), is_encoder, distill_token))
-        return _FeaturesCaptured
+        raise _FeaturesCaptured
 
     patch_module.bfs_merge = recorder
     try:
