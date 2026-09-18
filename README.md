@@ -23,7 +23,7 @@
     <img src="https://img.shields.io/badge/%F0%9F%93%83-Original%20version-yellow" alt="Article">
   </a>
   <!-- Extension -->
-  <a href="#">
+  <a href="https://arxiv.org/abs/2609.18279">
     <img src="https://img.shields.io/badge/%F0%9F%93%83-Extended%20version-yellow" alt="Article">
   </a>
   <!-- Repository -->
