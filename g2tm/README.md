@@ -1,6 +1,6 @@
 # G2TM: Single-Module Graph-Guided Token Merging for Efficient Semantic Segmentation
 
-![G2TM Token Visualizations](../figs/visualisations.png)
+![G2TM Token Visualizations](./figs/visualisations.png)
 
 <p align="center">
   <br> <strong>Authors:</strong> <a href="https://orcid.org/0009-0006-0682-8927" style="color: #4752C4">Victor BERCY</a>, <a href="https://orcid.org/0000-0002-5102-7735" style="color: #4752C4">Martyna POREBA</a>, <a href="https://orcid.org/0009-0000-9061-4396" style="color: #4752C4">Michal SZCZEPANSKI</a>, <a href="https://orcid.org/0000-0002-2860-8128" style="color: #4752C4">Samia BOUCHAFA</a>
@@ -29,12 +29,12 @@
 
 <p align="center">
   <!-- Article -->
-  <a href="https://www.scitepress.org/Link.aspx?doi=10.5220/0014267600004084">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Editor-yellow" alt="Article">
-  </a>
-  <!-- Article -->
   <a href="https://cea.hal.science/cea-05578363">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Open--source-brightgreen" alt="Article">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Original%20version-yellow" alt="Article">
+  </a>
+  <!-- Extension -->
+  <a href="https://arxiv.org/abs/2609.18279">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Extended%20version-yellow" alt="Article">
   </a>
   <!-- Repository -->
   <a href="https://github.com/vbercy/g2tm">
@@ -44,7 +44,7 @@
 
 Graph-Guided Token Merging (G2TM) is a lightweight one-shot module designed to eliminate redundant tokens early in the ViT architecture. It performs a single merging step after a shallow attention block, enabling all subsequent layers to operate on a compact token set. It leverages graph theory to identify groups of semantically redundant patches.
 
-![G2TM Overview](../figs/g2tm.png)
+![G2TM Overview](./figs/g2tm.png)
 
 ## G2TM applied to EoMT
 
@@ -95,7 +95,7 @@ wandb login
 cd g2tm/ && pip install -v -e . && cd ../
 ```
 
-The environment is ready when the following command, run from the root of the repository, prints the shape of the predicted masks and class logits. It builds an EoMT model with a ViT-S backbone, inserts G2TM at the 2nd layer and forwards a random 512×512 image, without any dataset, checkpoint or weight download:
+The environment is ready when the following command, run from the root of the repository, prints the shape of the predicted masks and class logits. It builds an EoMT model with a ViT-T backbone, inserts G2TM at the 2nd layer and forwards a random 512×512 image, without any dataset, checkpoint or weight download:
 
 ``` bash
 python -c "
@@ -152,8 +152,8 @@ wget --load-cookies cookies.txt --content-disposition https://www.cityscapes-dat
 
 ## How to use?
 
-This repository keeps EoMT's entry point for training and evaluation through `main.py` with a config from [`configs/`](../configs/).
-The analysis, export and utility scripts can be found in [`tools/`](../tools/). Every command below accepts the usual [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html) overrides, so G2TM is configured with plain `--model.*` arguments.
+This repository keeps EoMT's entry point for training and evaluation through `main.py` with a config from [`configs/`](./configs/).
+The analysis, export and utility scripts can be found in [`tools/`](./tools/). Every command below accepts the usual [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html) overrides, so G2TM is configured with plain `--model.*` arguments.
 
 ### G2TM options
 
@@ -209,7 +209,7 @@ To fine-tune from an existing checkpoint, add:
 **NOTE:** `torch.compile` is enabled by default. G2TM is compatible with it, but the BFS connected components algorithm is not (custom and NetworkX implementation); pass `--compile_disabled` to turn the compilation off entirely.
 
 For more training examples (other datasets and resolutions, the three G2TM
-implementations, (Inverse) Proportional Attention, threshold curriculum, fine-tuning), see [TRAINING](../TRAINING.md).
+implementations, (Inverse) Proportional Attention, threshold curriculum, fine-tuning), see [TRAINING](./TRAINING.md).
 
 ### Evaluation
 
@@ -311,7 +311,7 @@ python tools/predict_seg_maps.py \
 	--model.patch_type graph --model.selected_layer 2 --model.threshold 0.88
 ```
 
-- `--images_dir` / `--cmap`: input images and the class colormap.
+- `--images_dir` / `--cmap`: input images and the class colormap (default to the ADE20K ones shipped in [`vis/`](./vis/)).
 - `--overlay`: additionally save a blend of each image with its segmentation map.
 
 To visualize attention maps as well as the tokens at a specified block for a specific image, run the following command. It supports visualizations for both models with and without token reduction. For more details on the outputs, see the function documentation. In the example below, we generate visualization for an EoMT model with G2TM applied at the 2nd layer with a threshold of 0.88.
@@ -382,7 +382,7 @@ python tools/sync_wandb.py <run_folder> --project <project> --entity <entity>
 
 ## Results and Models
 
-See [RESULTS](../RESULTS.md) for some comparative results for EoMT + G2TM and the corresponding model checkpoints.
+See [RESULTS](./RESULTS.md) for some comparative results for EoMT + G2TM and the corresponding model checkpoints.
 
 **NOTE:** We are still looking for a solution to host all model checkpoints, in the meantime do not hesitate to request the checkpoints by contacting one of the authors.
 
@@ -401,7 +401,7 @@ See [RESULTS](../RESULTS.md) for some comparative results for EoMT + G2TM and th
 
 This code extends the official [EoMT](https://github.com/tue-mps/eomt) code (under [MIT Licence](https://github.com/tue-mps/eomt/blob/master/LICENSE)). It uses the repository structure and some utils functions from [ToMe](https://github.com/facebookresearch/ToMe) (under [CC-BY-NC licence](https://github.com/facebookresearch/ToMe/blob/main/LICENSE)).
 
-All files covered by EoMT's or ToMe's licences include a header indicating the licence and whether the file has been modified. In the G2TM package, you can find such files from ToMe's repository in the [`patch`](./g2tm/patch/) and [`vis`](./g2tm/vis/) folders.
+All files covered by EoMT's or ToMe's licences include a header indicating the licence and whether the file has been modified. In the G2TM package, you can find such files from ToMe's repository in the [`patch`](./g2tm/g2tm/patch/) and [`vis`](./g2tm/g2tm/vis/) folders.
 
 Below are other Python librairies, along with their corresponding licenses, used in this work:
 - [FVCore](https://github.com/facebookresearch/fvcore) under [Apache 2.0 License](https://github.com/facebookresearch/fvcore/blob/main/LICENSE)
@@ -417,7 +417,7 @@ Below are other Python librairies, along with their corresponding licenses, used
 
 ## License and Contributing
 
-By contributing to G2TM, you agree that your contributions will be licensed under the [LICENSE file](../LICENSE) in the root directory of this source tree.
+By contributing to G2TM, you agree that your contributions will be licensed under the [LICENSE file](./LICENSE) in the root directory of this source tree.
 
 ```
    Copyright © 2025 Commissariat à l'Energie Atomique et aux Energies Alternatives (CEA) 

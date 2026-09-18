@@ -29,12 +29,12 @@
 
 <p align="center">
   <!-- Article -->
-  <a href="https://www.scitepress.org/Link.aspx?doi=10.5220/0014267600004084">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Editor-yellow" alt="Article">
-  </a>
-  <!-- Article -->
   <a href="https://cea.hal.science/cea-05578363">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Open--source-brightgreen" alt="Article">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Original%20version-yellow" alt="Article">
+  </a>
+  <!-- Extension -->
+  <a href="https://arxiv.org/abs/2609.18279">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Extended%20version-yellow" alt="Article">
   </a>
   <!-- Repository -->
   <a href="https://github.com/vbercy/g2tm">
