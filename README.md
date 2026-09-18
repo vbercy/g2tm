@@ -30,11 +30,12 @@
 <p align="center">
   <!-- Article -->
   <a href="https://cea.hal.science/cea-05578363">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Original-yellow" alt="Article">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Original%20version-yellow" alt="Article">
   </a>
   <!-- Extension -->
-  <a href="#">
-    <img src="https://img.shields.io/badge/%F0%9F%93%83-Extension-yellow" alt="Article">
+  <a href="https://arxiv.org/abs/2609.18279">
+    <img src="https://img.shields.io/badge/%F0%9F%93%83-Extended%20version-yellow" alt="Article">
+  </a>
   <!-- Repository -->
   <a href="https://github.com/vbercy/g2tm">
     <img src="https://img.shields.io/badge/GitHub-gray.svg?style=flat&logo=github" alt="Repository's main branch">
