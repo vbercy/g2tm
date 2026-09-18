@@ -24,47 +24,6 @@ import click
 
 import torch
 
-# def pin_torch_cudnn():
-#     """Pin cuDNN to the copy bundled with PyTorch, before ORT loads its own.
-
-#     Two complete cuDNN 9 installations are visible here: the one shipped
-#     inside ``torch/lib`` and the system one in ``/lib/x86_64-linux-gnu``.
-#     cuDNN 9 is split across several shared objects (``libcudnn_ops``,
-#     ``libcudnn_graph``, ``libcudnn_cnn``, ...) that are only compatible
-#     within a single release, and they are loaded lazily by soname. So the
-#     process can end up mixing them: importing torch loads its
-#     ``libcudnn_graph.so.9``, then ONNX Runtime's CUDA provider pulls the
-#     *system* ``libcudnn_ops.so.9``, which then fails to resolve a symbol
-#     against the older graph library:
-
-#         libcudnn_ops.so.9: undefined symbol:
-#         _ZN5cudnn5graph13LibraryLoader11getInstanceEv,
-#         version libcudnn_graph.so.9
-
-#     ONNX Runtime reports this as "Failed to create CUDAExecutionProvider"
-#     and silently falls back to CPU. Loading torch's complete set with
-#     ``RTLD_GLOBAL`` first claims every cuDNN soname for one consistent
-#     release, so the system copies are never pulled in and the mix cannot
-#     happen. Whether it triggers otherwise depends on load order, which is
-#     why it appears intermittently.
-
-#     Best effort: failures here are non-fatal (e.g. CPU-only installs).
-#     """
-#     torch_lib = os.path.join(os.path.dirname(torch.__file__), "lib")
-#     # Sub-libraries first, then the dispatcher, so that every soname it may
-#     # dlopen later is already resolved to torch's copy.
-#     cudnn_libs = sorted(
-#         glob.glob(os.path.join(torch_lib, "libcudnn_*.so.9"))
-#     ) + glob.glob(os.path.join(torch_lib, "libcudnn.so.9"))
-#     for lib in cudnn_libs:
-#         try:
-#             ctypes.CDLL(lib, mode=ctypes.RTLD_GLOBAL)
-#         except OSError:
-#             pass
-
-
-# pin_torch_cudnn()
-
 from torch.utils.data import Dataset
 import onnx
 import onnxruntime as ort
@@ -81,9 +40,9 @@ import g2tm
 
 warnings.filterwarnings("ignore")
 
-model_names = {
-    "pure": "vit",
-    "graph": "g2tm",
+model_prefixes = {
+    "pure": "",
+    "graph": "g2tm_",
 }
 size_letters = {
     "tiny": "T",
@@ -206,12 +165,15 @@ def main(
 
     with torch.no_grad():
         if onnx_name is None:
+            size_letter = size_letters[variant["net_kwargs"]["backbone"].split("_")[1]]
             onnx_name = (
-                model_names[patch_type]
-                + "_"
-                + f"vit{size_letters[variant['net_kwargs']['backbone'].split('_')[1]]}"
-                + f"_L{selected_layer}_T{threshold:.2f}"
-                + (f"_{num_iters}it" if patch_type == "graph" else "")
+                model_prefixes[patch_type]
+                + f"vit_{size_letter}"
+                + (
+                    f"_L{selected_layer}_T{threshold:.2f}_{num_iters}it"
+                    if patch_type == "graph"
+                    else ""
+                )
             )
         onnx_file = Path(model_path).parent / (onnx_name + ".onnx")
         dummy_input = torch.randn(  # pylint: disable=E1101
