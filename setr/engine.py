@@ -81,7 +81,7 @@ def train_one_epoch(
 
         loss_value = loss.item()
         if not math.isfinite(loss_value):
-            print(f"Loss is {loss_value}, stopping training", force=True)
+            raise ValueError(f"Loss is {loss_value}, stopping training")
 
         optimizer.zero_grad()
         if loss_scaler is not None:

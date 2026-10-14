@@ -86,8 +86,8 @@ import g2tm
 @click.option("--epochs", default=None, type=int)
 @click.option("-lr", "--learning-rate", default=None, type=float)
 @click.option("-min-lr", "--minlearning-rate", default=1e-4, type=float)
-@click.option("--warmup-epochs", default=0, type=int)
-@click.option("--start-factor", default=1.0, type=float)
+@click.option("--warmup-epochs", default=None, type=int)
+@click.option("--start-factor", default=None, type=float)
 @click.option("--normalization", default=None, type=str)
 @click.option("--eval-freq", default=None, type=int)
 @click.option("--amp/--no-amp", default=False, is_flag=True)
@@ -425,7 +425,7 @@ def main(
 
     writer = SummaryWriter(log_dir / "tensorboard")
 
-    best_checkpoint = 0
+    best_checkpoint = 0.0
     for epoch in range(start_epoch, num_epochs):
         writer.add_scalar("epoch", epoch, epoch, new_style=True)
 
@@ -509,11 +509,11 @@ def main(
             if float(curr_checkpoint) > best_checkpoint:
                 print("saving the best checkpoint ...")
                 best_checkpoint = float(curr_checkpoint)
-                best_checkpoint_name = (
-                    "best_checkpoint_" + str(best_checkpoint) + ".pth"
-                )
-                best_checkpoint_path = log_dir / best_checkpoint_name
-                torch.save(snapshot, best_checkpoint_path)
+                # The snapshot only exists on the first process
+                if ptu.dist_rank == 0:
+                    best_checkpoint_name = "best_checkpoint_" + curr_checkpoint + ".pth"
+                    best_checkpoint_path = log_dir / best_checkpoint_name
+                    torch.save(snapshot, best_checkpoint_path)
 
         # log stats
         if ptu.dist_rank == 0:
