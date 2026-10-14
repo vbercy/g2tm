@@ -32,11 +32,12 @@ class Loader(DataLoader):
     def __init__(self, dataset, batch_size, num_workers, distributed, split):
         shuffle = split in {"train", "trainval"}
         if distributed:
+            # The sampler shuffles the data, PyTorch rejects shuffle=True with it
             sampler = DistributedSampler(dataset, shuffle=shuffle)
             super().__init__(
                 dataset,
                 batch_size=batch_size,
-                shuffle=shuffle,
+                shuffle=False,
                 num_workers=num_workers,
                 pin_memory=True,
                 sampler=sampler,

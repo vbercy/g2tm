@@ -81,8 +81,8 @@ import g2tm
 @click.option("--steps", default=None, type=int)
 @click.option("-lr", "--learning-rate", default=None, type=float)
 @click.option("-min-lr", "--minlearning-rate", default=1e-5, type=float)
-@click.option("--warmup-steps", default=0, type=int)
-@click.option("--start-factor", default=1.0, type=float)
+@click.option("--warmup-steps", default=None, type=int)
+@click.option("--start-factor", default=None, type=float)
 @click.option("--normalization", default=None, type=str)
 @click.option("--eval-freq", default=None, type=int)
 @click.option("--amp/--no-amp", default=False, is_flag=True)
@@ -98,7 +98,6 @@ import g2tm
 @click.option("--iprop-attn/--no-iprop-attn", default=False, is_flag=True)
 @click.option("--fast-sv/--bfs", default=False, is_flag=True)
 @click.option("--num-iters", default=None, type=int)
-@click.option("--n-cycles", default=None, type=int)
 def main(
     log_dir,
     dataset,
@@ -279,6 +278,11 @@ def main(
     # dataset
     dataset_kwargs = variant["dataset_kwargs"]
 
+    if dataset_kwargs["dataset"] == "ade20k_large":
+        dataset_kwargs["dataset"] = "ade20k"
+    elif dataset_kwargs["dataset"] == "cityscapes_large":
+        dataset_kwargs["dataset"] = "cityscapes"
+
     train_loader = create_dataset(dataset_kwargs)
     val_kwargs = dataset_kwargs.copy()
     val_kwargs["split"] = "val"
@@ -376,7 +380,7 @@ def main(
 
     writer = SummaryWriter(log_dir / "tensorboard")
 
-    best_checkpoint = 0
+    best_checkpoint = 0.0
     for epoch in range(start_epoch, num_epochs):
         writer.add_scalar("epoch", epoch, epoch, new_style=True)
 
@@ -384,18 +388,18 @@ def main(
             if (
                 epoch > curric_warmup - 1
                 and (epoch - curric_warmup) % curric_period == 0
-                and model_without_ddp.encoder.threshold > threshold
+                and model_without_ddp.vit.threshold > threshold
             ):
-                model_without_ddp.encoder.threshold = round(
-                    model_without_ddp.encoder.threshold - 0.01, 2
+                model_without_ddp.vit.threshold = round(
+                    model_without_ddp.vit.threshold - 0.01, 2
                 )
-                model_without_ddp.encoder.info["threshold"] = round(
-                    model_without_ddp.encoder.info["threshold"] - 0.01, 2
+                model_without_ddp.vit.info["threshold"] = round(
+                    model_without_ddp.vit.info["threshold"] - 0.01, 2
                 )
                 best_checkpoint = 0.0
             writer.add_scalar(
                 "threshold",
-                model_without_ddp.encoder.info["threshold"],
+                model_without_ddp.vit.info["threshold"],
                 epoch,
                 new_style=True,
             )
@@ -435,30 +439,30 @@ def main(
             eval_logger = evaluate(model, val_loader, amp_autocast)
 
             writer.add_scalar(
-                "val_pixel_acc",
-                eval_logger.pixel_accuracy.median,
+                "val_top1_accuracy",
+                eval_logger.top1_accuracy.median,
                 epoch,
                 new_style=True,
             )
             writer.add_scalar(
-                "val_mean_acc", eval_logger.mean_accuracy.median, epoch, new_style=True
-            )
-            writer.add_scalar(
-                "val_mean_iou", eval_logger.mean_iou.median, epoch, new_style=True
+                "val_top5_accuracy",
+                eval_logger.top5_accuracy.median,
+                epoch,
+                new_style=True,
             )
 
             print(f"Stats [{epoch}]:", eval_logger, flush=True)
             print("")
 
-            curr_checkpoint = str(eval_logger.mean_iou).split(" ", maxsplit=1)[0]
+            curr_checkpoint = str(eval_logger.top1_accuracy).split(" ", maxsplit=1)[0]
             if float(curr_checkpoint) > best_checkpoint:
                 print("saving the best checkpoint ...")
-                best_checkpoint = curr_checkpoint
-                best_checkpoint_name = (
-                    "best_checkpoint_" + str(best_checkpoint) + ".pth"
-                )
-                best_checkpoint_path = log_dir / best_checkpoint_name
-                torch.save(snapshot, best_checkpoint_path)
+                best_checkpoint = float(curr_checkpoint)
+                # The snapshot only exists on the first process
+                if ptu.dist_rank == 0:
+                    best_checkpoint_name = "best_checkpoint_" + curr_checkpoint + ".pth"
+                    best_checkpoint_path = log_dir / best_checkpoint_name
+                    torch.save(snapshot, best_checkpoint_path)
 
         # log stats
         if ptu.dist_rank == 0:
@@ -477,7 +481,7 @@ def main(
                 "epoch": epoch,
                 "num_updates": (epoch + 1) * len(train_loader),
                 "threshold": (
-                    model_without_ddp.encoder.threshold
+                    model_without_ddp.vit.threshold
                     if (patch_type != "pure")
                     else None
                 ),
